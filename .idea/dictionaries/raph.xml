@@ -6,6 +6,7 @@
       <w>calloc</w>
       <w>chunksize</w>
       <w>condvar</w>
+      <w>cpuid</w>
       <w>dedup</w>
       <w>dereferenced</w>
       <w>eagain</w>
@@ -78,6 +79,7 @@
       <w>rpmem</w>
       <w>rwlock</w>
       <w>setjmp</w>
+      <w>skylake</w>
       <w>spinlock</w>
       <w>strdup</w>
       <w>structs</w>

@@ -27,9 +27,12 @@ lto = true
 debug-assertions = false
 codegen-units = 1
 
+[build-dependencies]
+rust_c = { version = "0.1.1", features = ["build"] }
+
 [dependencies]
 bitflags = "^1.0"
 rust_c = { version = "0.1.1", features = ["macro"] }
 
-[build-dependencies]
-rust_c = { version = "0.1.1", features = ["build"] }
+[target.'cfg(target_arch = "x86_64")'.dependencies]
+raw-cpuid = "^3.0"

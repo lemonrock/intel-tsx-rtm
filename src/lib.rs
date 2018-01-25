@@ -15,15 +15,19 @@
 
 
 #[macro_use] extern crate bitflags;
+#[cfg(target_arch = "x86_64")] extern crate raw_cpuid;
 #[macro_use] extern crate rust_c;
 
 
+#[cfg(target_arch = "x86_64")] use ::raw_cpuid::CpuId;
 use ::std::mem::transmute;
 
 
-include!("TransactionResult.rs");
+include!("HardwareMemoryTransactionManager.rs");
+include!("HardwareMemoryTransactionResult.rs");
 
 
+#[cfg(target_arch = "x86_64")]
 c!
 {
 	#include <rtm.h>
