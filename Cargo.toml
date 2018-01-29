@@ -9,7 +9,6 @@ keywords = ["tsx", "rtm", "transactional memory"]
 categories = ["hardware-support", "concurrency"]
 license = "MIT"
 authors = ["Raphael Cohn <raphael.cohn@stormmq.com>"]
-documentation = "https://github.com/lemonrock/intel-tsx-rtm/blob/master/README.md"
 homepage = "https://github.com/lemonrock/intel-tsx-rtm"
 repository = "https://github.com/lemonrock/intel-tsx-rtm.git"
 exclude = ["*"]
