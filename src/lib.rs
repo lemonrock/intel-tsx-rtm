@@ -3,7 +3,7 @@
 
 
 #![allow(non_upper_case_globals)]
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 
 
 //! This crates provides a simple set of wrappers around Intel's TSX RTM instructions and associated intrinsics.

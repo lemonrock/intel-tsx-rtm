@@ -5,7 +5,7 @@
 [package]
 name = "intel-tsx-rtm"
 description = "Provides wrappers for Rust to use Intel's TSX RTM, a hardware transactional memory extension for some Skylake CPUs."
-keywords = ["tsx", "rtm", "transactional memory"]
+keywords = ["tsx", "rtm", "transactional", "memory"]
 categories = ["hardware-support", "concurrency"]
 license = "MIT"
 authors = ["Raphael Cohn <raphael.cohn@stormmq.com>"]
