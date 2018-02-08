@@ -1,6 +1,3 @@
 [submodule ".cargo"]
 	path = .cargo
 	url = https://github.com/lemonrock/.cargo.git
-[submodule "lib/tsx-tools"]
-	path = lib/tsx-tools
-	url = https://github.com/andikleen/tsx-tools.git

@@ -8,30 +8,27 @@ bitflags!
 	pub struct HardwareMemoryTransactionResult: u32
 	{
 		#[doc(hidden)]
-		const _XABORT_EXPLICIT = (1 << 0);
+		const _XABORT_EXPLICIT = _XABORT_EXPLICIT;
 		
 		#[doc(hidden)]
-		const _XABORT_RETRY = (1 << 1);
+		const _XABORT_RETRY = _XABORT_RETRY;
 		
 		#[doc(hidden)]
-		const _XABORT_CONFLICT = (1 << 2);
+		const _XABORT_CONFLICT = _XABORT_CONFLICT;
 		
 		#[doc(hidden)]
-		const _XABORT_CAPACITY = (1 << 3);
+		const _XABORT_CAPACITY = _XABORT_CAPACITY;
 		
 		#[doc(hidden)]
-		const _XABORT_DEBUG = (1 << 4);
+		const _XABORT_DEBUG = _XABORT_DEBUG;
 		
 		#[doc(hidden)]
-		const _XABORT_NESTED = (1 << 5);
+		const _XABORT_NESTED = _XABORT_NESTED;
 	}
 }
 
 impl HardwareMemoryTransactionResult
 {
-	/// Return this from `TransactionCallback` if a transaction is successful.
-	pub const TransactionIsSuccessful: u8 = 0;
-	
 	/// Return this from `TransactionCallback` if a transaction fails due to a busy lock.
 	/// Unofficial, see source code comments in <https://github.com/gcc-mirror/gcc/blob/da8dff89fa9398f04b107e388cb706517ced9505/libitm/config/x86/target.h>.
 	pub const TransactionFailedDueToBusyLock: u8 = 0xFF;
@@ -39,30 +36,21 @@ impl HardwareMemoryTransactionResult
 	#[inline(always)]
 	fn new(status: u32) -> Self
 	{
+		debug_assert_ne!(status, _XBEGIN_STARTED, "status should not be _XBEGIN_STARTED");
+		
 		Self
 		{
 			bits: status,
 		}
 	}
 	
-//	/// The transaction succeeded.
-//	#[inline(always)]
-//	pub fn transaction_was_successful(self) -> bool
-//	{
-//		self.is_empty()
-//	}
-	
 	/// Returns `Some(status_code)` if explicitly aborted.
-	/// `status_code` will never be zero.
-	/// Transaction was explicitly aborted with `_xabort()`. The parameter passed to `_xabort` is available with `_XABORT_CODE(status)`.
 	#[inline(always)]
 	pub fn transaction_was_explicitly_aborted_by_callback(self) -> Option<u8>
 	{
 		if self.contains(Self::_XABORT_EXPLICIT)
 		{
-			// Equivalent to `_XCODE_ABORT(status)`.
-			let status = (self.bits >> 24) & 0xFF;
-			Some(status as u8)
+			Some(_XABORT_CODE(self.bits))
 		}
 		else
 		{

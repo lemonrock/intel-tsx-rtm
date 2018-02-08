@@ -4,7 +4,7 @@
 
 [package]
 name = "intel-tsx-rtm"
-description = "Provides wrappers for Rust to use Intel's TSX RTM, a hardware transactional memory extension for some Skylake CPUs."
+description = "Provides intrinsics for Rust to use Intel's TSX RTM, a hardware transactional memory extension for some Skylake CPUs."
 keywords = ["tsx", "rtm", "transactional", "memory"]
 categories = ["hardware-support", "concurrency"]
 license = "MIT"
@@ -12,12 +12,10 @@ authors = ["Raphael Cohn <raphael.cohn@stormmq.com>"]
 homepage = "https://github.com/lemonrock/intel-tsx-rtm"
 repository = "https://github.com/lemonrock/intel-tsx-rtm.git"
 exclude = ["*"]
-include = ["README.md", "LICENSE", "COPYRIGHT", "src/**/*.rs", "Cargo.toml", "rustfmt.toml", "clippy.toml", "lib/**/*"]
-build = "src/build.rs"
-# Relative to Cargo.toml
+include = ["README.md", "LICENSE", "COPYRIGHT", "src/**/*.rs", "Cargo.toml", "rustfmt.toml", "clippy.toml"]
 readme = "README.md"
 publish = true
-version = "0.0.1"
+version = "0.1.0"
 
 [profile.release]
 opt-level = 3
@@ -27,12 +25,8 @@ lto = true
 debug-assertions = false
 codegen-units = 1
 
-[build-dependencies]
-rust_c = { version = "0.1.1", features = ["build"] }
-
 [dependencies]
 bitflags = "^1.0"
-rust_c = { version = "0.1.1", features = ["macro"] }
 
 [target.'cfg(target_arch = "x86_64")'.dependencies]
 raw-cpuid = "^3.0"

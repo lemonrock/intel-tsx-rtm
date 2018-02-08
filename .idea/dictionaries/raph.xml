@@ -26,6 +26,7 @@
       <w>fffd</w>
       <w>funcs</w>
       <w>growable</w>
+      <w>hyperthreaded</w>
       <w>immintrin</w>
       <w>initializable</w>
       <w>iovcnt</w>
@@ -99,6 +100,9 @@
       <w>xabort</w>
       <w>xadd</w>
       <w>xalloc</w>
+      <w>xbegin</w>
+      <w>xend</w>
+      <w>xtest</w>
       <w>zalloc</w>
       <w>zrealloc</w>
     </words>

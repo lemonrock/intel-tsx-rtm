@@ -12,8 +12,8 @@ pub struct HardwareMemoryTransactionManager
 impl HardwareMemoryTransactionManager
 {
 	/// Creates a new instance.
-	#[inline(always)]
 	#[cfg(target_arch = "x86_64")]
+	#[inline(always)]
 	pub fn new() -> Self
 	{
 		Self
@@ -35,8 +35,8 @@ impl HardwareMemoryTransactionManager
 	}
 	
 	/// Creates a new instance.
-	#[inline(always)]
 	#[cfg(not(target_arch = "x86_64"))]
+	#[inline(always)]
 	pub fn new() -> Self
 	{
 		Self
@@ -44,55 +44,79 @@ impl HardwareMemoryTransactionManager
 		}
 	}
 	
-	/// Executes the transaction once.
-	/// Panics on non x86_64 platforms.
-	/// Panics on x86_64 platforms which don't have transactions if running with debug assertions enabled.
+	/// Gracefully executes the transaction once if TSX transaction are supported.
+	/// If not supported, returns an Err with None.
+	/// Use this when executing a transaction for the first time in a loop, then adjust to either TSX specific code (eg calling `execute_transaction_once()` which will panic if TSX is not supported) or a software transactional manager.
+	#[cfg(not(target_arch = "x86_64"))]
+	#[inline(always)]
+	pub fn execute_transaction_once_gracefully<TransactionCallback: FnMut() -> Result<(), u8>>(&self, mut transaction_callback: TransactionCallback) -> Result<(), Option<HardwareMemoryTransactionResult>>
+	{
+		Err(None)
+	}
+	
+	/// Gracefully executes the transaction once if TSX transaction are supported.
+	/// If not supported, returns an Err with None.
+	/// Use this when executing a transaction for the first time in a loop, then adjust to either TSX specific code (eg calling `execute_transaction_once()` which will panic if TSX is not supported) or a software transactional manager.
 	#[inline(always)]
 	#[cfg(target_arch = "x86_64")]
-	pub fn execute_transaction_once<TransactionCallback: FnMut() -> u8>(&self, mut transaction_callback: TransactionCallback) -> Result<(), HardwareMemoryTransactionResult>
+	pub fn execute_transaction_once_gracefully<TransactionCallback: FnMut() -> Result<(), u8>>(&self, transaction_callback: TransactionCallback) -> Result<(), Option<HardwareMemoryTransactionResult>>
 	{
-		debug_assert!(self.cpu_supports_hardware_transactions(), "This x86_64 CPU does not have hardware transactions that we can use");
-		
-		let mut trait_object: &mut FnMut() -> u8 = &mut transaction_callback;
-		let pointer_to_pointer: extern fn() -> u8 = unsafe { transmute(&mut trait_object) };
-		
-		let status = unsafe { hsx_transaction(pointer_to_pointer) };
-		if status == 0
+		if self.cpu_supports_hardware_transactions()
 		{
-			Ok(())
+			self.execute_transaction_once(transaction_callback).map_err(|error| Some(error))
 		}
 		else
 		{
-			Err(HardwareMemoryTransactionResult::new(status))
+			Err(None)
 		}
 	}
 	
 	/// Executes the transaction once.
 	/// Panics on non x86_64 platforms.
 	/// Panics on x86_64 platforms which don't have transactions if running with debug assertions enabled.
+	/// `TransactionCallback` returns a status code if it wants to explicitly abort.
+	#[cfg(target_arch = "x86_64")]
 	#[inline(always)]
+	pub fn execute_transaction_once<TransactionCallback: FnMut() -> Result<(), u8>>(&self, mut transaction_callback: TransactionCallback) -> Result<(), HardwareMemoryTransactionResult>
+	{
+		debug_assert!(self.cpu_supports_hardware_transactions(), "This x86_64 CPU does not have hardware transactions that we can use");
+		
+		let xbegin_result_code = unsafe { _xbegin() };
+		if xbegin_result_code == _XBEGIN_STARTED
+		{
+			match transaction_callback()
+			{
+				Ok(()) =>
+				{
+					unsafe { _xend() };
+					Ok(())
+				},
+				Err(result_status_code) => unsafe { _xabort(result_status_code as u32) },
+			}
+		}
+		else
+		{
+			Err(HardwareMemoryTransactionResult::new(xbegin_result_code))
+		}
+	}
+	
+	/// Executes the transaction once.
+	/// Panics on non x86_64 platforms.
+	/// Panics on x86_64 platforms which don't have transactions if running with debug assertions enabled.
 	#[cfg(not(target_arch = "x86_64"))]
-	pub fn execute_transaction_once<TransactionCallback: FnMut() -> u8>(mut transaction_callback: TransactionCallback) -> Self
+	#[inline(always)]
+	pub fn execute_transaction_once<TransactionCallback: FnMut() -> u8>(mut transaction_callback: TransactionCallback) -> Result<(), HardwareMemoryTransactionResult>
 	{
 		panic!("TSX hardware transactions are not supported on non x86_64 platforms")
 	}
 	
 	/// Does this x86_64 CPU have hardware transactions (TSX)?
 	/// This will always be false for non-x86-64 platforms.
-	#[inline(always)]
 	#[cfg(target_arch = "x86_64")]
+	#[inline(always)]
 	pub fn cpu_supports_hardware_transactions(&self) -> bool
 	{
 		self.cpu_supports_hardware_transactions
-	}
-	
-	/// Does this x86_64 CPU have hardware transactions (TSX)?
-	/// This will always be false for non-x86-64 platforms.
-	#[inline(always)]
-	#[cfg(not(target_arch = "x86_64"))]
-	pub fn cpu_supports_hardware_transactions(&self) -> bool
-	{
-		false
 	}
 	
 	/// Use this to detect if inside a transaction callback.
@@ -102,20 +126,22 @@ impl HardwareMemoryTransactionManager
 	#[cfg(target_arch = "x86_64")]
 	pub fn is_inside_a_running_transaction(&self) -> bool
 	{
-		if cfg!(target_arch = "x86_64")
+		if self.cpu_supports_hardware_transactions()
 		{
-			if self.cpu_supports_hardware_transactions()
-			{
-				unsafe { hsx_xtest() != 0 }
-			}
-			else
-			{
-				false
-			}
+			unsafe { _xtest() }
 		}
 		else
 		{
 			false
 		}
+	}
+	
+	/// Does this x86_64 CPU have hardware transactions (TSX)?
+	/// This will always be false for non-x86-64 platforms.
+	#[cfg(not(target_arch = "x86_64"))]
+	#[inline(always)]
+	pub fn cpu_supports_hardware_transactions(&self) -> bool
+	{
+		false
 	}
 }
